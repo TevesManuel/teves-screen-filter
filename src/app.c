@@ -106,12 +106,11 @@ int main() {
     WNDCLASS wc = {0};
     wc.lpfnWndProc = WindowProc;
     wc.hInstance = GetModuleHandle(NULL);
-    wc.lpszClassName = "OpenGLFilter";
+    wc.lpszClassName = "TFilter";
     RegisterClass(&wc);
 
     HWND hwnd = CreateWindowEx(
-        WS_EX_TRANSPARENT,
-        // WS_EX_LAYERED | WS_EX_TRANSPARENT,
+        WS_EX_LAYERED | WS_EX_TRANSPARENT,
         wc.lpszClassName,
         "OpenGL Filter",
         WS_POPUP,
@@ -121,7 +120,10 @@ int main() {
         wc.hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
+
     SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+    SetWindowLong(hwnd, GWL_EXSTYLE, GetWindowLong(hwnd, GWL_EXSTYLE) | WS_EX_TRANSPARENT | WS_EX_TOPMOST);
+    SetLayeredWindowAttributes(hwnd, 0, 255, LWA_ALPHA);
 
     HDC hDC = GetDC(hwnd);
     PIXELFORMATDESCRIPTOR pfd = {0};
