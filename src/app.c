@@ -68,7 +68,10 @@ GLuint CreateShaderProgram() {
     return shaderProgram;
 }
 
-void CaptureScreenToTexture(GLuint texture) {
+void CaptureScreenToTexture(GLuint framebuffer, GLuint texture) {
+    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+    glClear(GL_COLOR_BUFFER_BIT);
+
     HDC hScreenDC = GetDC(NULL);
     int screenWidth = GetSystemMetrics(SM_CXSCREEN);
     int screenHeight = GetSystemMetrics(SM_CYSCREEN);
@@ -100,6 +103,25 @@ void CaptureScreenToTexture(GLuint texture) {
     DeleteObject(hBitmap);
     DeleteDC(hMemoryDC);
     ReleaseDC(NULL, hScreenDC);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+GLuint CreateFrameBuffer(GLuint* texture, GLuint* framebuffer, int width, int height) {
+    glGenFramebuffers(1, framebuffer);
+    glGenTextures(1, texture);
+
+    glBindTexture(GL_TEXTURE_2D, *texture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, *framebuffer);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, *texture, 0);
+
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        printf("Error creating framebuffer\n");
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 int main() {
@@ -109,32 +131,55 @@ int main() {
     wc.lpszClassName = "TFilter";
     RegisterClass(&wc);
 
+    int screenWidth = GetSystemMetrics(SM_CXSCREEN);
+    int screenHeight = GetSystemMetrics(SM_CYSCREEN);
+    
     HWND hwnd = CreateWindowEx(
         WS_EX_LAYERED | WS_EX_TRANSPARENT,
         wc.lpszClassName,
         "OpenGL Filter",
         WS_POPUP,
         CW_USEDEFAULT, CW_USEDEFAULT,
-        800, 600,
+        screenWidth, screenHeight,
         NULL, NULL,
         wc.hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
 
     SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
-    SetWindowLong(hwnd, GWL_EXSTYLE, GetWindowLong(hwnd, GWL_EXSTYLE) | WS_EX_TRANSPARENT | WS_EX_TOPMOST);
+    SetWindowLong(hwnd, GWL_EXSTYLE, GetWindowLong(hwnd, GWL_EXSTYLE) | WS_EX_TRANSPARENT | WS_EX_TOPMOST | WS_EX_LAYERED);
     SetLayeredWindowAttributes(hwnd, 0, 255, LWA_ALPHA);
+    
 
     HDC hDC = GetDC(hwnd);
-    PIXELFORMATDESCRIPTOR pfd = {0};
-    pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
-    pfd.nVersion = 1;
-    pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
-    pfd.iPixelType = PFD_TYPE_RGBA;
-    pfd.cColorBits = 32;
+
+    PIXELFORMATDESCRIPTOR pfd = {
+        sizeof(PIXELFORMATDESCRIPTOR),
+        1,                            
+        PFD_DRAW_TO_WINDOW |           
+        PFD_SUPPORT_OPENGL |
+        PFD_DOUBLEBUFFER,
+        PFD_TYPE_RGBA,
+        32,
+        0, 0, 0, 0, 0, 0,
+        8,
+        0,
+        0, 0, 0, 0,
+        24,
+        8,
+        0,
+        PFD_MAIN_PLANE,
+        0,
+        0, 0, 0
+    };
+
     SetPixelFormat(hDC, ChoosePixelFormat(hDC, &pfd), &pfd);
 
     HGLRC hRC = wglCreateContext(hDC);
+    
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     wglMakeCurrent(hDC, hRC);
 
     glewInit();
@@ -172,21 +217,24 @@ int main() {
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
-    GLuint texture;
-    glGenTextures(1, &texture);
+    GLuint framebuffer, texture;
+    CreateFrameBuffer(&texture, &framebuffer, screenWidth, screenHeight);
 
     unsigned char running = 1;
     MSG msg;
-    while (running) {
-        while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
-            if (msg.message == WM_QUIT) {
+    while (running)
+    {
+        while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+        {
+            if (msg.message == WM_QUIT)
+            {
                 running = 0;
             }
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
 
-        CaptureScreenToTexture(texture);
+        CaptureScreenToTexture(framebuffer, texture);
 
         glClear(GL_COLOR_BUFFER_BIT);
         glUseProgram(shaderProgram);
@@ -197,6 +245,7 @@ int main() {
     }
 
     glDeleteTextures(1, &texture);
+    glDeleteFramebuffers(1, &framebuffer);
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
     glDeleteBuffers(1, &EBO);
