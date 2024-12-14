@@ -135,7 +135,7 @@ int main() {
     int screenHeight = GetSystemMetrics(SM_CYSCREEN);
     
     HWND hwnd = CreateWindowEx(
-        WS_EX_LAYERED | WS_EX_TRANSPARENT,
+        WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_TOPMOST,
         wc.lpszClassName,
         "OpenGL Filter",
         WS_POPUP,
@@ -145,11 +145,9 @@ int main() {
         wc.hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
+    SetLayeredWindowAttributes(hwnd, 0, 0, LWA_ALPHA);
+    SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);//TODO
 
-    SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
-    SetWindowLong(hwnd, GWL_EXSTYLE, GetWindowLong(hwnd, GWL_EXSTYLE) | WS_EX_TRANSPARENT | WS_EX_TOPMOST | WS_EX_LAYERED);
-    SetLayeredWindowAttributes(hwnd, 0, 255, LWA_ALPHA);
-    
 
     HDC hDC = GetDC(hwnd);
 
