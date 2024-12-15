@@ -36,15 +36,44 @@ GLuint CreateShaderProgram() {
         "    TexCoord = aTexCoord;\n"
         "}";
 
-    const char* fragmentShaderSource = "#version 330 core\n"
-        "in vec2 TexCoord;\n"
+    // const char* fragmentShaderSource = "#version 330 core\n"
+    //     "in vec2 TexCoord;\n"
+    //     "out vec4 FragColor;\n"
+    //     "uniform sampler2D screenTexture;\n"
+    //     "void main() {\n"
+    //     "    vec3 color = texture(screenTexture, TexCoord).rgb;\n"
+    //     "    float gray = dot(color, vec3(0.299, 0.587, 0.114));\n"
+    //     "    FragColor = vec4(vec3(gray), 1.0);\n"
+    //     "}";
+    // const char* fragmentShaderSource = "#version 330 core\n"
+    //     "out vec4 FragColor;\n"
+    //     "in vec2 TexCoord;\n"
+    //     "uniform sampler2D screenTexture;\n"
+    //     "void main() {\n"
+    //     "    vec4 originalColor = texture(screenTexture, TexCoord);\n"
+    //     "    mat3 deuteranopiaMatrix = mat3(\n"
+    //     "        0.625, 0.375, 0.000,\n"
+    //     "        0.700, 0.300, 0.000,\n"
+    //     "        0.000, 0.300, 0.700\n"
+    //     "    );\n"
+    //     "    vec3 transformedColor = deuteranopiaMatrix * originalColor.rgb;\n"
+    //     "    FragColor = vec4(transformedColor, originalColor.a);\n"
+    //     "}\n";
+    const char* fragmentShaderSource = 
+        "#version 330 core\n"
         "out vec4 FragColor;\n"
+        "in vec2 TexCoord;\n"
         "uniform sampler2D screenTexture;\n"
         "void main() {\n"
-        "    vec3 color = texture(screenTexture, TexCoord).rgb;\n"
-        "    float gray = dot(color, vec3(0.299, 0.587, 0.114));\n"
-        "    FragColor = vec4(vec3(gray), 1.0);\n"
-        "}";
+        "    vec4 originalColor = texture(screenTexture, TexCoord);\n"
+        "    mat3 tritanopiaMatrix = mat3(\n"
+        "        0.950, 0.050, 0.000,\n"
+        "        0.000, 0.433, 0.567,\n"
+        "        0.000, 0.475, 0.525\n"
+        "    );\n"
+        "    vec3 transformedColor = tritanopiaMatrix * originalColor.rgb;\n"
+        "    FragColor = vec4(transformedColor, originalColor.a);\n"
+        "}\n";
 
     GLuint vertexShader = CompileShader(vertexShaderSource, GL_VERTEX_SHADER);
     GLuint fragmentShader = CompileShader(fragmentShaderSource, GL_FRAGMENT_SHADER);
@@ -230,6 +259,7 @@ int main() {
             }
             TranslateMessage(&msg);
             DispatchMessage(&msg);
+            SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);//TODO
         }
 
         CaptureScreenToTexture(framebuffer, texture);
@@ -242,6 +272,7 @@ int main() {
         SwapBuffers(hDC);
     }
 
+    glDeleteProgram(shaderProgram);
     glDeleteTextures(1, &texture);
     glDeleteFramebuffers(1, &framebuffer);
     glDeleteVertexArrays(1, &VAO);
