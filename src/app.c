@@ -3,6 +3,9 @@
 #include <gl/gl.h>
 #include <stdio.h>
 
+int screenWidth;
+int screenHeight;
+
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     if (uMsg == WM_DESTROY || uMsg == WM_CLOSE) {
         PostQuitMessage(0);
@@ -79,8 +82,6 @@ void CaptureScreenToTexture(GLuint framebuffer, GLuint texture) {
     glClear(GL_COLOR_BUFFER_BIT);
 
     HDC hScreenDC = GetDC(NULL);
-    int screenWidth = GetSystemMetrics(SM_CXSCREEN);
-    int screenHeight = GetSystemMetrics(SM_CYSCREEN);
 
     BITMAPINFOHEADER bi;
     ZeroMemory(&bi, sizeof(BITMAPINFOHEADER));
@@ -131,17 +132,21 @@ GLuint CreateFrameBuffer(GLuint* texture, GLuint* framebuffer, int width, int he
 }
 
 int main() {
+    screenWidth = GetSystemMetrics(SM_CXSCREEN);
+    screenHeight = GetSystemMetrics(SM_CYSCREEN);
+
     WNDCLASS wc = {0};
     wc.lpfnWndProc = WindowProc;
     wc.hInstance = GetModuleHandle(NULL);
     wc.lpszClassName = "TFilter";
     RegisterClass(&wc);
-
-    int screenWidth = GetSystemMetrics(SM_CXSCREEN);
-    int screenHeight = GetSystemMetrics(SM_CYSCREEN);
     
     HWND hwnd = CreateWindowEx(
-        WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_TOPMOST | WS_EX_TOOLWINDOW,
+        #ifdef EXPORT_APP
+            WS_EX_LAYERED | WS_EX_TOPMOST | WS_EX_TOOLWINDOW,
+        #else
+            WS_EX_LAYERED | WS_EX_TOPMOST,
+        #endif
         wc.lpszClassName,
         "Teves Screen Filter",
         WS_POPUP,
@@ -154,8 +159,6 @@ int main() {
     
     SetLayeredWindowAttributes(hwnd, 0, 0, LWA_ALPHA);
     
-    SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, screenWidth, screenHeight, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
-
     HDC hDC = GetDC(hwnd);
 
     PIXELFORMATDESCRIPTOR pfd = {
@@ -238,9 +241,8 @@ int main() {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
-
-        // SetFocus(hwnd);
-
+        SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, screenWidth, screenHeight, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
+        
         CaptureScreenToTexture(framebuffer, texture);
 
         glClear(GL_COLOR_BUFFER_BIT);
