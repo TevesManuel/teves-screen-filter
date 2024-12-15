@@ -1,0 +1,24 @@
+id ICON "./icon/icon.ico"
+1 VERSIONINFO
+FILEVERSION     0,0,0,1
+PRODUCTVERSION  0,0,0,1
+BEGIN
+  BLOCK "StringFileInfo"
+  BEGIN
+    BLOCK "040904E4"
+    BEGIN
+      VALUE "CompanyName", "TEVES"
+      VALUE "FileDescription", "Teves Filter Screen"
+      VALUE "FileVersion", "0.0.0.1"
+      VALUE "InternalName", "teves-filter-screen"
+      VALUE "LegalCopyright", "Manuel Teves"
+      VALUE "OriginalFilename", "TFS.exe"
+      VALUE "ProductName", "Teves Filter Screen"
+      VALUE "ProductVersion", "0.0.0.1"
+    END
+  END
+  BLOCK "VarFileInfo"
+  BEGIN
+    VALUE "Translation", 0x809, 1252
+  END
+END

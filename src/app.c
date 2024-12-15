@@ -36,29 +36,6 @@ GLuint CreateShaderProgram() {
         "    TexCoord = aTexCoord;\n"
         "}";
 
-    // const char* fragmentShaderSource = "#version 330 core\n"
-    //     "in vec2 TexCoord;\n"
-    //     "out vec4 FragColor;\n"
-    //     "uniform sampler2D screenTexture;\n"
-    //     "void main() {\n"
-    //     "    vec3 color = texture(screenTexture, TexCoord).rgb;\n"
-    //     "    float gray = dot(color, vec3(0.299, 0.587, 0.114));\n"
-    //     "    FragColor = vec4(vec3(gray), 1.0);\n"
-    //     "}";
-    // const char* fragmentShaderSource = "#version 330 core\n"
-    //     "out vec4 FragColor;\n"
-    //     "in vec2 TexCoord;\n"
-    //     "uniform sampler2D screenTexture;\n"
-    //     "void main() {\n"
-    //     "    vec4 originalColor = texture(screenTexture, TexCoord);\n"
-    //     "    mat3 deuteranopiaMatrix = mat3(\n"
-    //     "        0.625, 0.375, 0.000,\n"
-    //     "        0.700, 0.300, 0.000,\n"
-    //     "        0.000, 0.300, 0.700\n"
-    //     "    );\n"
-    //     "    vec3 transformedColor = deuteranopiaMatrix * originalColor.rgb;\n"
-    //     "    FragColor = vec4(transformedColor, originalColor.a);\n"
-    //     "}\n";
     const char* fragmentShaderSource = 
         "#version 330 core\n"
         "out vec4 FragColor;\n"
@@ -164,9 +141,9 @@ int main() {
     int screenHeight = GetSystemMetrics(SM_CYSCREEN);
     
     HWND hwnd = CreateWindowEx(
-        WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_TOPMOST,
+        WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_TOPMOST | WS_EX_TOOLWINDOW,
         wc.lpszClassName,
-        "OpenGL Filter",
+        "Teves Screen Filter",
         WS_POPUP,
         CW_USEDEFAULT, CW_USEDEFAULT,
         screenWidth, screenHeight,
@@ -174,9 +151,10 @@ int main() {
         wc.hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
+    
     SetLayeredWindowAttributes(hwnd, 0, 0, LWA_ALPHA);
-    SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);//TODO
-
+    
+    SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, screenWidth, screenHeight, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
 
     HDC hDC = GetDC(hwnd);
 
@@ -259,8 +237,9 @@ int main() {
             }
             TranslateMessage(&msg);
             DispatchMessage(&msg);
-            SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);//TODO
         }
+
+        // SetFocus(hwnd);
 
         CaptureScreenToTexture(framebuffer, texture);
 
