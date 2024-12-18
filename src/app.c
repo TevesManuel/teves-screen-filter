@@ -145,7 +145,7 @@ int main() {
         #ifdef EXPORT_APP
             WS_EX_LAYERED | WS_EX_TOPMOST | WS_EX_TOOLWINDOW,
         #else
-            WS_EX_LAYERED | WS_EX_TOPMOST,
+            WS_EX_LAYERED | WS_EX_TOPMOST | WS_EX_TRANSPARENT,
         #endif
         wc.lpszClassName,
         "Teves Screen Filter",
@@ -158,7 +158,7 @@ int main() {
     ShowWindow(hwnd, SW_SHOW);
     
     SetLayeredWindowAttributes(hwnd, 0, 0, LWA_ALPHA);
-    
+
     HDC hDC = GetDC(hwnd);
 
     PIXELFORMATDESCRIPTOR pfd = {
@@ -241,11 +241,13 @@ int main() {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
-        SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, screenWidth, screenHeight, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
         
-        CaptureScreenToTexture(framebuffer, texture);
+        SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
 
-        glClear(GL_COLOR_BUFFER_BIT);
+        SetLayeredWindowAttributes(hwnd, 0, 0, LWA_ALPHA);
+        CaptureScreenToTexture(framebuffer, texture);
+        SetLayeredWindowAttributes(hwnd, 0, 255, LWA_ALPHA);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glUseProgram(shaderProgram);
         glBindTexture(GL_TEXTURE_2D, texture);
         glBindVertexArray(VAO);
