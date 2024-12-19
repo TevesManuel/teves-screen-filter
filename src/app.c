@@ -155,9 +155,9 @@ int main() {
         NULL, NULL,
         wc.hInstance, NULL);
 
-    ShowWindow(hwnd, SW_SHOW);
-    
     SetLayeredWindowAttributes(hwnd, 0, 0, LWA_ALPHA);
+
+    ShowWindow(hwnd, SW_SHOW);
 
     HDC hDC = GetDC(hwnd);
 
@@ -242,11 +242,7 @@ int main() {
             DispatchMessage(&msg);
         }
         
-        SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
-
-        SetLayeredWindowAttributes(hwnd, 0, 0, LWA_ALPHA);
         CaptureScreenToTexture(framebuffer, texture);
-        SetLayeredWindowAttributes(hwnd, 0, 255, LWA_ALPHA);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glUseProgram(shaderProgram);
         glBindTexture(GL_TEXTURE_2D, texture);
